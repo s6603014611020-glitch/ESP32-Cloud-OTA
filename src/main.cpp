@@ -101,25 +101,19 @@ void sendLineAlert(String message) {
 }
 
 // ============================================================================
-// 5. ฟังก์ชันส่งข้อมูลบันทึกลง Google Sheets
+// 5. ฟังก์ชันส่งข้อมูลบันทึกลง Google Sheets (ปรับปรุงเป็นแบบ GET)
 // ============================================================================
 void postToGoogleSheets(float temp, int rssi, uint32_t heap) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-    http.begin(GAS_URL);
-    http.addHeader("Content-Type", "application/json");
-
-    StaticJsonDocument<200> doc;
-    doc["temp"] = temp;
-    doc["rssi"] = rssi;
-    doc["heap"] = heap;
-
-    String jsonString;
-    serializeJson(doc, jsonString);
-
+    
+    // ต่อข้อความแบบ Query String ส่งผ่าน URL
+    String url = String(GAS_URL) + "?temp=" + String(temp, 1) + "&rssi=" + String(rssi) + "&heap=" + String(heap);
+    
+    http.begin(url);
     Serial.println("[Sheets] Sending data to Google Sheets...");
-    int httpResponseCode = http.POST(jsonString);
+    int httpResponseCode = http.GET(); // เปลี่ยนจาก POST เป็น GET
 
     if (httpResponseCode > 0) {
       Serial.printf("[Sheets] Response Code: %d\n", httpResponseCode);
